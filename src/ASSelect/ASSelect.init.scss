@@ -1,0 +1,12 @@
+as-select {
+  display: inline-block;
+  border: 1px solid lightgray;
+  border-radius: 1px;
+  height: 1em;
+  vertical-align: middle;
+  width: 150px;
+
+  * {
+    display: none;
+  }
+}
