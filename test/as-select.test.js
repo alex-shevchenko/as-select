@@ -495,7 +495,40 @@ describe('as-select', function () {
         await tick();
 
         expect(this.element.value).to.equal('value3');
+      });
+    });
+
+    describe('disabled options', async function() {
+      beforeEach(async function() {
+        await this.appendOptions();
+
+        this.element.item(OPTIONS_COUNT - 2).disabled = true;
+      });
+
+      it ('keyboard navigation should not stop on disabled options', async function() {
+        await simulateKeyboardEvent(this.element, 'ArrowDown');
+        checkActive(this.element, 0);
+
+        await simulateKeyboardEvent(this.element, 'ArrowUp');
+        checkActive(this.element, OPTIONS_COUNT - 1);
+
+        await simulateKeyboardEvent(this.element, 'ArrowUp');
+        checkActive(this.element, OPTIONS_COUNT - 3);
+
+        await simulateKeyboardEvent(this.element, 'ArrowDown');
+        checkActive(this.element, OPTIONS_COUNT - 1);
+      });
+
+      it ('click on disabled option should do nothing', async function() {
+        this.element.clearable = false;
+        expect(this.element.value).to.equal('value0');
+
+        await simulateKeyboardEvent(this.element, 'ArrowDown');
+        this.element.item(OPTIONS_COUNT - 2).click();
+        await tick();
+
+        expect(this.element.value).to.equal('value0');
       })
-    })
+    });
   });
 });

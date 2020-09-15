@@ -9,6 +9,8 @@ export default class ASSelectOption extends ASComponentBase {
     private shadow: ShadowRoot;
     private el: HTMLElement;
 
+    static get observedAttributes(): string[] { return ['disabled']; }
+
     constructor() {
         super();
 
@@ -19,6 +21,16 @@ export default class ASSelectOption extends ASComponentBase {
 
     connectedCallback(): void {
         this.setAttributeIfNotSetByAuthor('role', 'option');
+        this.toggleDisabled();
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
+        switch (name) {
+            case 'disabled':
+                this.toggleDisabled();
+                break;
+        }
     }
 
     get value(): string | null {
@@ -26,6 +38,20 @@ export default class ASSelectOption extends ASComponentBase {
     }
     set value(val: string | null) {
         this.setAttributeValue('value', val);
+    }
+
+    get disabled(): boolean {
+        return this.hasAttribute('disabled');
+    }
+    set disabled(val: boolean) {
+        this.setAttributeValue('disabled', val);
+        this.toggleDisabled(val);
+    }
+
+    private toggleDisabled(val: boolean | undefined = undefined) {
+        if (typeof val == 'undefined') val = this.disabled;
+        this.setClass('disabled', val = this.disabled);
+        if (val) this.active = false;
     }
 
     private _selected = false;

@@ -21,4 +21,8 @@
     background-color: blue;
     color: white;
   }
+  &.disabled {
+    background-color: lightgray;
+    color: darkgray;
+  }
 }

@@ -23,6 +23,8 @@ describe('as-option', function () {
 
     describe('value', attributePropertyTest('value', 'testValue'));
 
+    describe('disabled', attributePropertyTest('disabled', true, false, 'and set part "disabled"', shadowPartTest));
+
     describe('selected', booleanPropertyTest('selected', false, 'and set part "selected"', shadowPartTest));
 
     describe('active', booleanPropertyTest('active', false, 'and set part "active"', shadowPartTest));

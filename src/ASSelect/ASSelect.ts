@@ -74,6 +74,8 @@ export default class ASSelect extends ASComponentBase {
     get labels(): NodeList { return this.internals.labels; }
     get length(): number { return this._options.length; }
     get options(): ASSelectOption[] { return this._options; }
+    get enabledOptions(): ASSelectOption[] { return this._options.filter((el) => !el.disabled); }
+
     get selectedIndex(): number { return this.selected ? this.selected.index : -1; }
     get selectedOption(): ASSelectOption | undefined { return this.selected; }
     item(i: number): ASSelectOption | undefined { return this.options[i]; }
@@ -84,7 +86,7 @@ export default class ASSelect extends ASComponentBase {
     get value(): string | null { return this.selected ? this.selected.value : null }
     set value(v: string | null) {
         this.desiredValue = v;
-        const el = this._options.find(el => el.value == v);
+        const el = this.enabledOptions.find(el => el.value == v);
         this.setSelected(el);
     }
 
@@ -202,12 +204,13 @@ export default class ASSelect extends ASComponentBase {
     }
 
     private shiftActive(next = true): void {
-        let start: number;
+        let start;
         if (this.active) {
             start = this.active.index;
         } else {
             start = next ? this._options.length - 1 : 0;
         }
+
         const inc = next ? 1 : -1;
 
         let i = start;
@@ -219,12 +222,16 @@ export default class ASSelect extends ASComponentBase {
             if (i >= this._options.length) i -= this._options.length;
 
             el = this._options[i];
-        } while (i != start && el && el.filtered);
+        } while (i != start && el && (el.filtered || el.disabled));
 
         this.setActive(el);
     }
 
     private setActive(el?: ASSelectOption): void {
+        if (el?.disabled) {
+            return;
+        }
+
         if (this.active) {
             this.active.active = false;
         }
@@ -262,7 +269,7 @@ export default class ASSelect extends ASComponentBase {
         clearTimeout(this.typeaheadTimeout);
         this.typeaheadStr += char.toLowerCase();
 
-        const el = this._options.find(el => el.textContent ? el.textContent.toLowerCase().startsWith(this.typeaheadStr) : false);
+        const el = this.enabledOptions.find(el => el.textContent ? el.textContent.toLowerCase().startsWith(this.typeaheadStr) : false);
         if (el) this.setActive(el);
 
         this.typeaheadTimeout = window.setTimeout(() => this.typeaheadStr = '', ASSelect.TYPEAHEAD_TIMEOUT);
@@ -273,8 +280,8 @@ export default class ASSelect extends ASComponentBase {
             if (el) this.desiredValue = el.value; else this.desiredValue = null;
         }
 
-        if (!this.clearable && !el && this._options.length) {
-            el = this._options[0];
+        if (!this.clearable && !el && this.enabledOptions.length) {
+            el = this.enabledOptions[0];
         }
 
         if (this.selected == el) return;
@@ -334,8 +341,8 @@ export default class ASSelect extends ASComponentBase {
 
             if (this.selected)
                 this.setActive(this.selected);
-            else if (this._options.length > 0)
-                this.setActive(this._options[0]);
+            else if (this.enabledOptions.length > 0)
+                this.setActive(this.enabledOptions[0]);
 
             this.list.className = '';
         }
@@ -344,8 +351,10 @@ export default class ASSelect extends ASComponentBase {
     private onOptionClicked(event: MouseEvent): void {
         const target = event.target;
         if (target instanceof ASSelectOption) {
-            this.setSelected(target, true);
-            this.toggleList(false);
+            if (!target.disabled) {
+                this.setSelected(target, true);
+                this.toggleList(false);
+            }
         }
         event.stopPropagation();
     }
@@ -410,13 +419,13 @@ export default class ASSelect extends ASComponentBase {
                     event.preventDefault();
                     break;
                 case 'Home':
-                    if (this.options.length)
-                        this.setActive(this.options[0]);
+                    if (this.enabledOptions.length)
+                        this.setActive(this.enabledOptions[0]);
                     event.preventDefault();
                     break;
                 case 'End':
-                    if (this.options.length)
-                        this.setActive(this.options[this.options.length - 1]);
+                    if (this.enabledOptions.length)
+                        this.setActive(this.enabledOptions[this.enabledOptions.length - 1]);
                     event.preventDefault();
                     break;
                 case 'Escape':
