@@ -14,7 +14,7 @@ export default class ASSelect extends ASComponentBase {
     static readonly TYPEAHEAD_TIMEOUT = 500;
 
     static get formAssociated(): boolean { return true; }
-    static get observedAttributes(): string[] { return ['disabled', 'clearable', 'searchable']; }
+    static get observedAttributes(): string[] { return ['disabled', 'clearable', 'searchable', 'required']; }
 
     private internals: ElementInternals;
     private shadow: ShadowRoot;
@@ -71,6 +71,10 @@ export default class ASSelect extends ASComponentBase {
     }
 
     get form(): HTMLFormElement | undefined { return this.internals.form; }
+    get validity(): ValidityState {return this.internals.validity; }
+    get validationMessage(): string {return this.internals.validationMessage; }
+    get willValidate(): boolean {return this.internals.willValidate; }
+
     get labels(): NodeList { return this.internals.labels; }
     get length(): number { return this._options.length; }
     get options(): ASSelectOption[] { return this._options; }
@@ -82,6 +86,8 @@ export default class ASSelect extends ASComponentBase {
     get name(): string | null { return this.getAttribute('name'); }
     set name(v: string | null) { this.setAttributeValue('name', v); }
     get type(): string { return this.localName; }
+    checkValidity(): boolean { return this.internals.checkValidity(); }
+    reportValidity(): boolean {return this.internals.reportValidity(); }
 
     get value(): string | null { return this.selected ? this.selected.value : null }
     set value(v: string | null) {
@@ -98,6 +104,9 @@ export default class ASSelect extends ASComponentBase {
 
     get clearable(): boolean { return this.hasAttribute('clearable'); }
     set clearable(v: boolean) { this.setAttributeValue('clearable', v); }
+
+    get required(): boolean { return this.hasAttribute('required'); }
+    set required(v: boolean) { this.setAttributeValue('required', v); }
 
     connectedCallback(): void {
         this.toggleDisabled();
@@ -166,6 +175,9 @@ export default class ASSelect extends ASComponentBase {
                 break;
             case 'clearable':
                 this.toggleClearable();
+                break;
+            case 'required':
+                this.validate();
                 break;
         }
     }
@@ -305,6 +317,8 @@ export default class ASSelect extends ASComponentBase {
         if (interactive) {
             this.dispatchEvent(new Event('change'))
         }
+
+        this.validate();
     }
 
     private positionList(): void {
@@ -345,6 +359,14 @@ export default class ASSelect extends ASComponentBase {
                 this.setActive(this.enabledOptions[0]);
 
             this.list.className = '';
+        }
+    }
+
+    private validate(): void {
+        if (this.required && !this.value) {
+            this.internals.setValidity({valueMissing: true}, "Please select one of the options.")
+        } else {
+            this.internals.setValidity({});
         }
     }
 
