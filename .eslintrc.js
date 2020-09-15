@@ -9,6 +9,7 @@ module.exports = {
     'plugin:@typescript-eslint/recommended',
   ],
   rules: {
-    '@typescript-eslint/triple-slash-reference': 'off'
-  }
+    "@typescript-eslint/triple-slash-reference": "off"
+  },
+  ignorePatterns: ['**/*.js']
 };
